@@ -2,6 +2,8 @@ const _ = require('lodash');
 const { getPoint, getWidth, getHeight } = require('./imageReader');
 const hashObject = require('../helpers/hashObject');
 
+const MAX_LOOP_SIZE = 500000;
+
 const xy = (x, y) => `${x},${y}`;
 
 const coor = (str) => {
@@ -10,34 +12,109 @@ const coor = (str) => {
 };
 
 /**
- * Recursively find every point making the current continuous area
+ * Find every point making the current continuous area
  * @param {Object} img
- * @param {number} x current position X
- * @param {number} y current position X
+ * @param {number} x0
+ * @param {number} y0
  * @param {Object} [prevData] current data
  * @returns {Object} data of the continuous area
  */
-function findData(img, x, y, prevData = {}) {
-  let data = prevData;
+function findData(img, x0, y0) {
+  const value = getPoint(img, x0, y0);
+  let current = {
+    from: undefined,
+    neighboors: [false, false, false, false],
+    position: {
+      x: x0,
+      y: y0,
+    },
+  };
+  const data = {
+    [xy(x0, y0)]: current,
+  };
 
-  if (data[xy(x, y)]) {
-    return data;
-  }
+  let i = 0;
+  while (current) {
+    i++;
+    if (i >= MAX_LOOP_SIZE) {
+      throw new Error(`Max loop size exceeded (${MAX_LOOP_SIZE}).`);
+    }
+    const { x, y } = current.position;
+    // ABOVE
+    if (!current.neighboors[0]) {
+      current.neighboors[0] = true;
+      // check neighboor value
+      if (!data[xy(x, y - 1)] && getPoint(img, x, y - 1) === value) {
+        const next = {
+          from: current,
+          neighboors: [false, false, true, false],
+          position: {
+            x,
+            y: y - 1,
+          },
+        };
+        data[xy(x, y - 1)] = next;
+        current = next;
+        continue;
+      }
+    }
+    // RIGHT
+    if (!current.neighboors[1]) {
+      current.neighboors[1] = true;
+      // check neighboor value
+      if (!data[xy(x + 1, y)] && getPoint(img, x + 1, y) === value) {
+        const next = {
+          from: current,
+          neighboors: [false, false, false, true],
+          position: {
+            x: x + 1,
+            y,
+          },
+        };
+        data[xy(x + 1, y)] = next;
+        current = next;
+        continue;
+      }
+    }
+    // UNDER
+    if (!current.neighboors[2]) {
+      current.neighboors[2] = true;
+      // check neighboor value
+      if (!data[xy(x, y + 1)] && getPoint(img, x, y + 1) === value) {
+        const next = {
+          from: current,
+          neighboors: [true, false, false, false],
+          position: {
+            x,
+            y: y + 1,
+          },
+        };
+        data[xy(x, y + 1)] = next;
+        current = next;
+        continue;
+      }
+    }
+    // LEFT
+    if (!current.neighboors[3]) {
+      current.neighboors[3] = true;
+      // check neighboor value
+      if (!data[xy(x - 1, y)] && getPoint(img, x - 1, y) === value) {
+        const next = {
+          from: current,
+          neighboors: [false, true, false, false],
+          position: {
+            x: x - 1,
+            y,
+          },
+        };
+        data[xy(x - 1, y)] = next;
+        current = next;
+        continue;
+      }
+    }
 
-  data[xy(x, y)] = true;
-
-  const point = getPoint(img, x, y);
-  if (point === getPoint(img, x, y - 1)) {
-    data = findData(img, x, y - 1, data);
-  }
-  if (point === getPoint(img, x + 1, y)) {
-    data = findData(img, x + 1, y, data);
-  }
-  if (point === getPoint(img, x, y + 1)) {
-    data = findData(img, x, y + 1, data);
-  }
-  if (point === getPoint(img, x - 1, y)) {
-    data = findData(img, x - 1, y, data);
+    // go back one rank if every neighboors is done
+    current = current.from;
   }
 
   return data;
@@ -80,10 +157,11 @@ function findContinuousArea(img, x, y) {
 /**
  * Find every continuous areas in an image
  * @param {Object} img
- * @param {number} [minSize=10] minimum size for a CA to be kept
+ * @param {number} [minSize=15] minimum size for a CA to be kept
+ * @param {number} [minSize=500] maximum size for a CA to be kept
  * @returns {Object[]} list of continuous area with a size above minSize
  */
-function findContinuousAreas(img, minSize = 10) {
+function findContinuousAreas(img, minSize = 15, maxSize = 500) {
   const width = getWidth(img);
   const height = getHeight(img);
 
@@ -101,7 +179,7 @@ function findContinuousAreas(img, minSize = 10) {
 
   // keep only areas big enough
   return continuousAreas
-    .filter(ca => ca.size >= minSize)
+    .filter(ca => ca.size >= minSize && ca.size <= maxSize)
     .map(ca => ({
       size: ca.size,
       position: ca.position,

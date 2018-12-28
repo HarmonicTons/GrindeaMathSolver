@@ -49,7 +49,7 @@ describe('Large Continuous Areas finder', () => {
   it('should find patterns in images', () => {
     const img1 = getImageFromRaw(raw2);
     const img2 = getImageFromRaw(raw3);
-    const patterns = findContiunousAreas(img1);
+    const patterns = findContiunousAreas(img1, 10);
     expect(patterns.length).toBe(1);
     const pattern = patterns[0];
     const continuousAreas = findContiunousAreas(img2, 3);
@@ -59,5 +59,12 @@ describe('Large Continuous Areas finder', () => {
       x: 3,
       y: 1,
     });
+  });
+
+  it('should not stack overflow with large pictures', () => {
+    const raw = `\n${`${'.'.repeat(500)}\n`.repeat(500)}`;
+    const img = getImageFromRaw(raw);
+    const ca = findContiunousAreas(img);
+    expect(ca.length).toBe(0);
   });
 });
