@@ -2,16 +2,15 @@ const imageReader = require('./imageReader');
 const findContinuousAreas = require('./findContinuousAreas');
 const hash = require('./data/hash');
 
-
 function process(position) {
-  const resultImage = imageReader.getImage(position.x + 324, position.y + 115, 64, 22);
-  const operatorsImages = [0, 1, 2, 3].map(v => imageReader.getImage(
-    position.x + 254 + 34 * v,
-    position.y + 162, 34, 22,
+  const resultImage = imageReader.getImage(position.x + 300, position.y + 110, 100, 30);
+  const operatorsImages = [0, 1, 2, 3, 4].map(v => imageReader.getImage(
+    position.x + 236 + 34 * v,
+    position.y + 160, 40, 30,
   ));
-  const numbersImages = [0, 1, 2, 3, 4].map(v => imageReader.getImage(
-    position.x + 237 + 34 * v,
-    position.y + 224, 34, 22,
+  const numbersImages = [0, 1, 2, 3, 4, 5].map(v => imageReader.getImage(
+    position.x + 220 + 34 * v,
+    position.y + 220, 40, 30,
   ));
 
   const resultCAs = findContinuousAreas(resultImage);

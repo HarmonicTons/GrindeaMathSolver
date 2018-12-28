@@ -4,8 +4,13 @@ const Timer = require('tiny-timer');
 const Logger = require('./helpers/Logger');
 const solver = require('./solver');
 const process = require('./image-processing');
+const control = require('./control');
 
 /* eslint-disable no-await-in-loop */
+
+function mouseMoved(p1, p2, tolerance = 2) {
+  return Math.sqrt(((p1.x - p2.x) ** 2) + ((p1.y - p2.y) ** 2)) > tolerance;
+}
 
 async function main() {
   try {
@@ -21,9 +26,10 @@ async function main() {
     let timer = new Timer();
     timer.start(TIME);
 
+    // eslint-disable-next-line no-constant-condition
     while (true) {
       const nextPosition = robot.getMousePos();
-      if (position.x !== nextPosition.x && position.y !== nextPosition.y) {
+      if (mouseMoved(position, nextPosition)) {
         position = nextPosition;
         timer.stop();
         timer = new Timer();
@@ -35,10 +41,34 @@ async function main() {
         break;
       }
     }
-    const { result, operators, numbers } = process(position);
 
-    const solution = solver(result, operators, numbers);
-    Logger.info(solution);
+    Logger.info('START');
+    while (!mouseMoved(position, robot.getMousePos())) {
+      const { result, operators: rawOperators, numbers: rawNumbers } = process(position);
+
+      const operators = rawOperators.map(o => ({ value: o }));
+      const numbers = rawNumbers.map(o => ({ value: o }));
+
+      const solution = solver(result, operators, numbers);
+      Logger.info(solution.numbers, solution.operators);
+
+      Logger.debug('Going to starting position.');
+      await control.goToStartPosition();
+      for (let i = 0; i < operators.length; i++) {
+        const iNumber = numbers.findIndex(n => n === solution.numbers[i]);
+        Logger.debug(`Number: ${solution.numbers[i].value}, position: ${iNumber}`);
+        await control.goToNumber(iNumber);
+        const iOperator = operators.findIndex(o => o === solution.operators[i]);
+        Logger.debug(`Operator: ${solution.operators[i].value}, position: ${iOperator}`);
+        await control.goToOperator(iOperator);
+      }
+      const iNumber = numbers.findIndex(n => n === solution.numbers[operators.length]);
+      Logger.debug(`Number: ${solution.numbers[operators.length].value}, position: ${iNumber}`);
+      await control.goToNumber(iNumber);
+      Logger.debug('Leaving room.');
+      await control.leaveRoom();
+    }
+    Logger.info('END');
   } catch (error) {
     Logger.error('The main process crashed with the error:', error);
   }
