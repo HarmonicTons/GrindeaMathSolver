@@ -105,7 +105,7 @@ function findContinuousAreas(img, minSize = 10) {
     .map(ca => ({
       size: ca.size,
       position: ca.position,
-      // transform data object into an hash for memory perf and easy comparaison
+      // transform data object into a hash for memory perf and easy comparaison
       hash: hashObject(ca.data),
     }));
 }
