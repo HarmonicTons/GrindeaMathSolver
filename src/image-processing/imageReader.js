@@ -1,3 +1,9 @@
+const robot = require('robotjs');
+
+function getImage(x, y, width, height) {
+  return robot.screen.capture(x, y, width, height);
+}
+
 function getWidth(img) {
   return img.width;
 }
@@ -14,6 +20,7 @@ function getPoint(img, x, y) {
 }
 
 module.exports = {
+  getImage,
   getPoint,
   getWidth,
   getHeight,
