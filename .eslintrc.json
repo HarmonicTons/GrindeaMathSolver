@@ -5,7 +5,8 @@
         "json"
     ],
     "rules": {
-        "no-plusplus": 0
+        "no-plusplus": 0,
+        "no-continue": 0
     },
     "env": {
         "jest": true

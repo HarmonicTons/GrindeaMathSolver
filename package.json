@@ -5,6 +5,8 @@
   "main": "src/index.js",
   "dependencies": {
     "js-logger": "^1.6.0",
+    "lodash": "^4.17.11",
+    "md5": "^2.2.1",
     "robotjs": "^0.5.1"
   },
   "devDependencies": {
