@@ -2,7 +2,7 @@ const imageReader = require('./imageReader');
 const findContinuousAreas = require('./findContinuousAreas');
 const hash = require('./data/hash');
 
-function process(position) {
+function readPuzzle(position) {
   const resultImage = imageReader.getImage(position.x + 300, position.y + 110, 100, 30);
   const operatorsImages = [0, 1, 2, 3, 4].map(v => imageReader.getImage(
     position.x + 236 + 34 * v,
@@ -32,4 +32,4 @@ function process(position) {
   };
 }
 
-module.exports = process;
+module.exports = readPuzzle;

@@ -1,7 +1,7 @@
 const robot = require('robotjs');
 const wait = require('../helpers/wait');
 
-const AFTER_MOVEMENT = 500;
+const AFTER_MOVEMENT = 200;
 
 robot.setKeyboardDelay(50);
 
@@ -52,6 +52,7 @@ async function goToNumber(n) {
 
 async function leaveRoom() {
   await move('up', 1000);
+  await wait(300);
 }
 
 module.exports = {
